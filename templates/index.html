@@ -1,6 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h1>Anketa</h1>
+  <h1 class="display-4">Anketa</h1>
+
+  <p class="lead">O čem by měl být některý příští <b>PyWorking</b>?</p>
+
+  <form method="post" action="/add-suggestion">
+    <input type="text" name="suggestion" placeholder="Váš návrh">
+    <input type="submit" value="Přidat">
+  </form>
+
+  <table class="table" style="margin-top: 1rem; width: unset">
+    <tbody>
+      {% for suggestion in suggestions %}
+        <tr>
+          <td style="text-align: right">
+            <b>{{ suggestion.vote_count }}</b>
+          </td>
+          <td>
+            <form method="post" action="/vote">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-secondary" name="action" value="upvote">
+                  <i class="fa fa-arrow-up" aria-hidden="true" style="color: silver"></i>
+                </button>
+                <button class="btn btn-secondary" name="action" value="downvote">
+                  <i class="fa fa-arrow-down" aria-hidden="true" style="color: silver"></i>
+                </button>
+              </div>
+          </form>
+          </td>
+          <td>{{ suggestion.title }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
 {% endblock %}
