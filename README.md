@@ -1,7 +1,7 @@
 db-workshop-web-app
 ===================
 
-[![Build Status](https://travis-ci.org/messa/db-workshop-web-app.svg?branch=master)](https://travis-ci.org/messa/db-workshop-web-app)
+[![Build Status](https://travis-ci.org/messa/db-workshop-web-app.svg?branch=sqlalchemy)](https://travis-ci.org/messa/db-workshop-web-app)
 
 Work in progress
 
