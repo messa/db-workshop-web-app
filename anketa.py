@@ -1,35 +1,47 @@
+from datetime import datetime
 import flask
+import sqlite3
 
 
 app = flask.Flask(__name__)
 
 
+@app.before_request
+def before():
+    flask.g.conn = get_conn()
+
+
+@app.before_first_request
+def before_first():
+    conn = get_conn()
+    prepare_schema(conn)
+
+
 @app.route('/')
 def index():
-    suggestions = [
-        {
-            "title": "Tvorba webu",
-            "vote_count": 8,
-        }, {
-            "title": "Statistika",
-            "vote_count": 5,
-        }, {
-            "title": "Lineární algebra",
-            "vote_count": 3,
-        },
-    ]
-    return flask.render_template('index.html', suggestions=suggestions)
+    return flask.render_template('index.html',
+        suggestions=list_suggestions(flask.g.conn))
 
 
 @app.route('/add-suggestion', methods=['POST'])
 def add_suggestion():
-    suggestion = flask.request.form['suggestion']
+    title = flask.request.form['suggestion']
+    insert_suggestion(flask.g.conn, title, None)
     return flask.redirect('/')
 
 
 @app.route('/vote', methods=['POST'])
 def vote():
+    sug_id = flask.request.form['suggestion_id']
+    if flask.request.form['action'] == 'upvote':
+        insert_vote(flask.g.conn, sug_id, None, True)
+    elif flask.request.form['action'] == 'downvote':
+        insert_vote(flask.g.conn, sug_id, None, False)
     return flask.redirect('/')
+
+
+def get_conn():
+    return sqlite3.connect('anketa.db')
 
 
 def prepare_schema(conn):
@@ -59,10 +71,11 @@ def insert_suggestion(conn, title, cookie, date=None):
     c.execute(
         "INSERT INTO suggestions (title, date, cookie) VALUES (?, ?, ?)",
         (title, date.isoformat(), cookie))
+    conn.commit()
     return c.lastrowid
 
 
-def insert_upvote(conn, suggestion_id, cookie, upvote, date=None):
+def insert_vote(conn, suggestion_id, cookie, upvote, date=None):
     date = date or datetime.utcnow()
     c = conn.cursor()
     c.execute(
@@ -73,12 +86,14 @@ def insert_upvote(conn, suggestion_id, cookie, upvote, date=None):
             cookie,
             1 if upvote else -1,
         ))
+    conn.commit()
 
 
 def list_suggestions(conn):
     c = conn.cursor()
     c.execute('''
         SELECT
+            suggestions.id,
             suggestions.title,
             COALESCE(SUM(votes.value), 0) AS vote_count
         FROM suggestions
@@ -89,8 +104,9 @@ def list_suggestions(conn):
     suggestions = []
     for row in c:
         suggestions.append({
-            'title': row[0],
-            'vote_count': row[1],
+            'id': row[0],
+            'title': row[1],
+            'vote_count': row[2],
         })
     return suggestions
 

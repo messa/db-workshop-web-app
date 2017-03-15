@@ -44,14 +44,14 @@ def test_workflow_prototype(temp_dir):
     sug2_id = anketa.insert_suggestion(
         conn, 'Statistika', 'cookie1', date=datetime(2017, 3, 15, 13, 0))
     # add some upvotes
-    anketa.insert_upvote(conn, sug1_id, 'cookie1', upvote=True, date=datetime(2017, 3, 15, 13, 0))
-    anketa.insert_upvote(conn, sug1_id, 'cookie2', upvote=True, date=datetime(2017, 3, 15, 13, 0))
-    anketa.insert_upvote(conn, sug1_id, 'cookie3', upvote=False, date=datetime(2017, 3, 15, 13, 0))
+    anketa.insert_vote(conn, sug1_id, 'cookie1', upvote=True, date=datetime(2017, 3, 15, 13, 0))
+    anketa.insert_vote(conn, sug1_id, 'cookie2', upvote=True, date=datetime(2017, 3, 15, 13, 0))
+    anketa.insert_vote(conn, sug1_id, 'cookie3', upvote=False, date=datetime(2017, 3, 15, 13, 0))
     # the most important query :)
     rows = anketa.list_suggestions(conn)
     assert rows == [
-        {'title': 'Tvorba webu', 'vote_count': 1},
-        {'title': 'Statistika',  'vote_count': 0},
+        {'id': sug1_id, 'title': 'Tvorba webu', 'vote_count': 1},
+        {'id': sug2_id, 'title': 'Statistika',  'vote_count': 0},
     ]
 
 
