@@ -65,27 +65,35 @@ def test_smoke_sqlalchemy(temp_dir):
     conn.close()
 
 
+@fixture
+def sa_session(temp_dir):
+    import sqlalchemy
+    from sqlalchemy.orm import sessionmaker
+    db_path = temp_dir / 'test.db'
+    engine = sqlalchemy.create_engine('sqlite:///' + str(db_path), echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session
 
-def test_workflow_prototype(temp_dir):
-    conn = sqlite3.connect(str(temp_dir / 'workflow.db'))
-    anketa.prepare_schema(conn)
+
+def test_workflow_prototype(temp_dir, sa_session):
+    anketa.prepare_schema(sa_session)
     sug1_id = anketa.insert_suggestion(
-        conn, 'Tvorba webu', 'cookie1', date=datetime(2017, 3, 15, 12, 0))
+        sa_session, 'Tvorba webu', 'cookie1', date=datetime(2017, 3, 15, 12, 0))
     sug2_id = anketa.insert_suggestion(
-        conn, 'Statistika', 'cookie1', date=datetime(2017, 3, 15, 13, 0))
+        sa_session, 'Statistika', 'cookie1', date=datetime(2017, 3, 15, 13, 0))
     # add some upvotes
-    anketa.insert_vote(conn, sug1_id, 'cookie1', upvote=True, date=datetime(2017, 3, 15, 13, 0))
-    anketa.insert_vote(conn, sug1_id, 'cookie2', upvote=True, date=datetime(2017, 3, 15, 13, 0))
-    anketa.insert_vote(conn, sug1_id, 'cookie3', upvote=False, date=datetime(2017, 3, 15, 13, 0))
+    anketa.insert_vote(sa_session, sug1_id, 'cookie1', upvote=True, date=datetime(2017, 3, 15, 13, 0))
+    anketa.insert_vote(sa_session, sug1_id, 'cookie2', upvote=True, date=datetime(2017, 3, 15, 13, 0))
+    anketa.insert_vote(sa_session, sug1_id, 'cookie3', upvote=False, date=datetime(2017, 3, 15, 13, 0))
     # the most important query :)
-    rows = anketa.list_suggestions(conn)
+    rows = anketa.list_suggestions(sa_session)
     assert rows == [
         {'id': sug1_id, 'title': 'Tvorba webu', 'vote_count': 1},
         {'id': sug2_id, 'title': 'Statistika',  'vote_count': 0},
     ]
 
 
-def test_prepare_schema_twice(temp_dir):
-    conn = sqlite3.connect(str(temp_dir / 'workflow.db'))
-    anketa.prepare_schema(conn)
-    anketa.prepare_schema(conn)
+def test_prepare_schema_twice(temp_dir, sa_session):
+    anketa.prepare_schema(sa_session)
+    anketa.prepare_schema(sa_session)

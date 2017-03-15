@@ -1,6 +1,7 @@
 from datetime import datetime
 import flask
 import sqlite3
+import sqlalchemy
 
 # Flask docs: http://flask.pocoo.org/docs/0.12/
 # SQLite docs: https://docs.python.org/3/library/sqlite3.html
@@ -51,87 +52,89 @@ def vote():
     return flask.redirect('/')
 
 
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+
+Base = declarative_base()
+
+
+class Suggestion (Base):
+
+    __tablename__ = 'suggestions'
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    date = Column(String)
+
+
+class Vote (Base):
+    __tablename__ = 'votes'
+
+    id = Column(Integer, primary_key=True)
+    suggestion_id = Column(Integer)
+    date = Column(String)
+    value = Column(Integer)
+
+
 def get_conn():
-    return sqlite3.connect('anketa.db')
+    from sqlalchemy.orm import sessionmaker
+    engine = sqlalchemy.create_engine('sqlite:///aneta.db', echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session
 
 
-def prepare_schema(conn):
+def prepare_schema(session):
     '''
     Vytvoření tabulek, se kterými tato aplikace pracuje.
     Pokud tabulky už existují, tak se nic neděje.
     '''
-    c = conn.cursor()
-    # https://www.sqlite.org/lang_createtable.html
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS suggestions (
-            id INTEGER PRIMARY KEY,
-            title TEXT,
-            date DATE,
-            cookie TEXT
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS votes (
-            id INTEGER PRIMARY KEY,
-            suggestion_id TEXT,
-            date DATE,
-            cookie TEXT,
-            value INTEGER
-        )
-    ''')
+    engine = session.get_bind()
+    Base.metadata.create_all(engine)
 
 
-def insert_suggestion(conn, title, cookie, date=None):
+def insert_suggestion(session, title, cookie, date=None):
     date = date or datetime.utcnow()
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO suggestions (title, date, cookie) VALUES (?, ?, ?)",
-        (title, date.isoformat(), cookie))
-    conn.commit()
-    return c.lastrowid
+    sug = Suggestion(
+        title=title,
+        date=date)
+    session.add(sug)
+    session.commit()
+    return sug.id
 
 
-def insert_vote(conn, suggestion_id, cookie, upvote, date=None):
+def insert_vote(session, suggestion_id, cookie, upvote, date=None):
     '''
     Vloží vote pro nějakou suggestion do DB.
     '''
     date = date or datetime.utcnow()
-    c = conn.cursor()
-    # https://www.sqlite.org/lang_insert.html
-    c.execute(
-        "INSERT INTO votes (suggestion_id, date, cookie, value) "
-        "VALUES (?, ?, ?, ?)", (
-            int(suggestion_id),
-            date.isoformat(),
-            cookie,
-            1 if upvote else -1,
-        ))
-    conn.commit()
+    vote = Vote(
+        suggestion_id=int(suggestion_id),
+        date=date.isoformat(),
+        value=1 if upvote else -1)
+    session.add(vote)
+    session.commit()
 
 
-def list_suggestions(conn):
+def list_suggestions(session):
     '''
     Vrátí seznam suggestions z DB.
     Návratovou hodnotou je list dictů.
     '''
-    c = conn.cursor()
-    # https://www.sqlite.org/lang_select.html
-    c.execute('''
-        SELECT
-            suggestions.id,
-            suggestions.title,
-            COALESCE(SUM(votes.value), 0) AS vote_count
-        FROM suggestions
-        LEFT JOIN votes ON (votes.suggestion_id = suggestions.id)
-        GROUP BY suggestions.id
-        ORDER BY vote_count DESC
-    ''')
+    from sqlalchemy.sql import func
+    items = (session
+        .query(
+            Suggestion,
+            func.sum(Vote.value))
+        .outerjoin(Vote, Vote.suggestion_id == Suggestion.id)
+        .group_by(Suggestion.id)
+        .all())
     suggestions = []
-    for row in c:
+    for suggestion, vote_count in items:
         suggestions.append({
-            'id': row[0],
-            'title': row[1],
-            'vote_count': row[2],
+            'id': suggestion.id,
+            'title': suggestion.title,
+            'vote_count': vote_count or 0,
         })
     return suggestions
 
