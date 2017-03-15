@@ -6,37 +6,30 @@ import sqlite3
 app = flask.Flask(__name__)
 
 
-@app.before_request
-def before():
-    flask.g.conn = get_conn()
-
-
-@app.before_first_request
-def before_first():
-    conn = get_conn()
-    prepare_schema(conn)
-
-
 @app.route('/')
 def index():
+    conn = get_conn()
+    prepare_schema(conn)
     return flask.render_template('index.html',
-        suggestions=list_suggestions(flask.g.conn))
+        suggestions=list_suggestions(conn))
 
 
 @app.route('/add-suggestion', methods=['POST'])
 def add_suggestion():
     title = flask.request.form['suggestion']
-    insert_suggestion(flask.g.conn, title, None)
+    conn = get_conn()
+    insert_suggestion(conn, title, None)
     return flask.redirect('/')
 
 
 @app.route('/vote', methods=['POST'])
 def vote():
     sug_id = flask.request.form['suggestion_id']
+    conn = get_conn()
     if flask.request.form['action'] == 'upvote':
-        insert_vote(flask.g.conn, sug_id, None, True)
+        insert_vote(conn, sug_id, None, True)
     elif flask.request.form['action'] == 'downvote':
-        insert_vote(flask.g.conn, sug_id, None, False)
+        insert_vote(conn, sug_id, None, False)
     return flask.redirect('/')
 
 
