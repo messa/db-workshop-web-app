@@ -53,3 +53,9 @@ def test_workflow_prototype(temp_dir):
         {'title': 'Tvorba webu', 'vote_count': 1},
         {'title': 'Statistika',  'vote_count': 0},
     ]
+
+
+def test_prepare_schema_twice(temp_dir):
+    conn = sqlite3.connect(str(temp_dir / 'workflow.db'))
+    anketa.prepare_schema(conn)
+    anketa.prepare_schema(conn)

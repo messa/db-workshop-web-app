@@ -35,7 +35,7 @@ def vote():
 def prepare_schema(conn):
     c = conn.cursor()
     c.execute('''
-        CREATE TABLE suggestions (
+        CREATE TABLE IF NOT EXISTS suggestions (
             id INTEGER PRIMARY KEY,
             title TEXT,
             date DATE,
@@ -43,7 +43,7 @@ def prepare_schema(conn):
         )
     ''')
     c.execute('''
-        CREATE TABLE votes (
+        CREATE TABLE IF NOT EXISTS votes (
             id INTEGER PRIMARY KEY,
             suggestion_id TEXT,
             date DATE,
