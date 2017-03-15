@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 from pytest import fixture
 import sqlite3
+import sqlalchemy
 
 import anketa
 
@@ -34,6 +35,35 @@ def test_smoke_sqlite3(temp_dir):
     c.execute("INSERT INTO stocks VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
     conn.commit()
     conn.close()
+
+
+def test_smoke_sqlalchemy(temp_dir):
+    db_path = temp_dir / 'smoke.db'
+    engine = sqlalchemy.create_engine('sqlite:///' + str(db_path), echo=True)
+    from sqlalchemy.ext.declarative import declarative_base
+    Base = declarative_base()
+    from sqlalchemy import Column, Integer, String
+    class User(Base):
+        __tablename__ = 'users'
+        id = Column(Integer, primary_key=True)
+        name = Column(String)
+    Base.metadata.create_all(engine)
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    joe = User(name='Joe Smith')
+    session.add(joe)
+    session.commit()
+    joe = session.query(User).first()
+    assert joe.name == 'Joe Smith'
+    # overeni pres sqlite3
+    conn = sqlite3.connect(str(db_path))
+    c = conn.cursor()
+    c.execute('SELECT name FROM users')
+    row, = c.fetchall()
+    assert row[0] == 'Joe Smith'
+    conn.close()
+
 
 
 def test_workflow_prototype(temp_dir):
