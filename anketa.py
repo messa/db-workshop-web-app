@@ -78,7 +78,7 @@ class Vote (Base):
 
 def get_conn():
     from sqlalchemy.orm import sessionmaker
-    engine = sqlalchemy.create_engine('sqlite:///aneta.db', echo=True)
+    engine = sqlalchemy.create_engine('sqlite:///anketa.db', echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
     return session
