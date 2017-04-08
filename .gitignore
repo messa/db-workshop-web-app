@@ -7,3 +7,4 @@ dist/
 venv/
 *.db
 *.journal
+demo.db-journal
