@@ -62,51 +62,21 @@ def prepare_schema(conn):
     '''
     c = conn.cursor()
     # https://www.sqlite.org/lang_createtable.html
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS suggestions (
-            id INTEGER PRIMARY KEY,
-            title TEXT,
-            date DATE,
-            cookie TEXT
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS votes (
-            id INTEGER PRIMARY KEY,
-            suggestion_id TEXT,
-            date DATE,
-            cookie TEXT,
-            value INTEGER
-        )
-    ''')
+    # TODO
+    # c.execute('CREATE TABLE ...')
 
 
 def insert_suggestion(conn, title, cookie, date=None):
-    date = date or datetime.utcnow()
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO suggestions (title, date, cookie) VALUES (?, ?, ?)",
-        (title, date.isoformat(), cookie))
-    conn.commit()
-    return c.lastrowid
+    # TODO
+    pass
 
 
 def insert_vote(conn, suggestion_id, cookie, upvote, date=None):
     '''
     Vloží vote pro nějakou suggestion do DB.
     '''
-    date = date or datetime.utcnow()
-    c = conn.cursor()
-    # https://www.sqlite.org/lang_insert.html
-    c.execute(
-        "INSERT INTO votes (suggestion_id, date, cookie, value) "
-        "VALUES (?, ?, ?, ?)", (
-            int(suggestion_id),
-            date.isoformat(),
-            cookie,
-            1 if upvote else -1,
-        ))
-    conn.commit()
+    # TODO
+    pass
 
 
 def list_suggestions(conn):
@@ -114,26 +84,22 @@ def list_suggestions(conn):
     Vrátí seznam suggestions z DB.
     Návratovou hodnotou je list dictů.
     '''
-    c = conn.cursor()
-    # https://www.sqlite.org/lang_select.html
-    c.execute('''
-        SELECT
-            suggestions.id,
-            suggestions.title,
-            COALESCE(SUM(votes.value), 0) AS vote_count
-        FROM suggestions
-        LEFT JOIN votes ON (votes.suggestion_id = suggestions.id)
-        GROUP BY suggestions.id
-        ORDER BY vote_count DESC
-    ''')
-    suggestions = []
-    for row in c:
-        suggestions.append({
-            'id': row[0],
-            'title': row[1],
-            'vote_count': row[2],
-        })
-    return suggestions
+    # TODO
+    return [
+        {
+            'id': 1,
+            'title': 'Tvorba webu',
+            'vote_count': 10,
+        }, {
+            'id': 1,
+            'title': 'Statistika',
+            'vote_count': 8,
+        }, {
+            'id': 1,
+            'title': 'Lineární algebra',
+            'vote_count': 5,
+        },
+    ]
 
 
 if __name__ == '__main__':
