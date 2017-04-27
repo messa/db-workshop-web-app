@@ -18,6 +18,7 @@ run: $(venv_dir)/packages-installed
 	env \
 		FLASK_APP=anketa.py \
 		FLASK_DEBUG=1 \
+		ANKETA_CONF=conf/anketa.localhost.yaml \
 		$(venv_dir)/bin/flask run
 
 

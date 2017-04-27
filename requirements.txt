@@ -1,2 +1,5 @@
 flask
 pytest
+pyyaml
+requests
+requests_oauthlib

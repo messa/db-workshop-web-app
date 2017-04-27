@@ -1,0 +1,2 @@
+*.yaml
+!*.sample.yaml

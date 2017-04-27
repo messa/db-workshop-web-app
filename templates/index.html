@@ -5,10 +5,21 @@
 
   <p class="lead">O čem by měl být některý příští <b>PyWorking</b>?</p>
 
-  <form method="post" action="/add-suggestion">
-    <input type="text" name="suggestion" placeholder="Váš návrh">
-    <input type="submit" value="Přidat">
-  </form>
+  {% if email %}
+    <p>
+      Jste přihlášeni jako {{ email }}.
+      <a href="/logout">Odhlásit</a>
+    </p>
+    <form method="post" action="/add-suggestion">
+      <input type="text" name="suggestion" placeholder="Váš návrh">
+      <input type="submit" value="Přidat">
+    </form>
+  {% else %}
+    <p>
+      Pro hlasování a zadávání návrhů je potřeba se
+      <a href="/login/via-github">přihlásit přes Github</a>.
+    </p>
+  {% endif %}
 
   <table class="table" style="margin-top: 1rem; width: unset">
     <tbody>
