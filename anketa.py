@@ -30,7 +30,7 @@ def index():
     prepare_schema(conn)
     return flask.render_template('index.html',
         email=get_session_email(),
-        suggestions=list_suggestions(conn))
+        suggestions=list_suggestions(conn, get_session_email()))
 
 
 def get_session_email():
@@ -129,12 +129,14 @@ def vote():
         flask.abort(403) # Forbidden
     conn = get_conn()
     if action == 'upvote':
-        is_upvote = True
+        vote_value = 1
     elif action == 'downvote':
-        is_upvote = False
+        vote_value = -1
+    elif action == 'reset':
+        vote_value = 0
     else:
         raise Exception('Unknown action {!r}'.format(action))
-    insert_vote(conn, sug_id, email, is_upvote)
+    save_vote(conn, sug_id, email, vote_value)
     return flask.redirect('/')
 
 
@@ -185,28 +187,31 @@ def insert_suggestion(conn, title, email, date=None):
     conn.commit()
 
 
-def insert_vote(conn, suggestion_id, email, upvote, date=None):
+def save_vote(conn, suggestion_id, email, vote_value, date=None):
     '''
     Vloží vote pro nějakou suggestion do DB.
     '''
+    if not email:
+        return
     date = date or datetime.utcnow()
     c = conn.cursor()
     # https://www.sqlite.org/lang_insert.html
     c.execute(
         "DELETE FROM votes WHERE suggestion_id = ? AND email = ?",
         (int(suggestion_id), email))
-    c.execute(
-        "INSERT INTO votes (suggestion_id, date, email, value) "
-        "VALUES (?, ?, ?, ?)", (
-            int(suggestion_id),
-            date.isoformat(),
-            email,
-            1 if upvote else -1,
-        ))
+    if vote_value:
+        c.execute(
+            "INSERT INTO votes (suggestion_id, date, email, value) "
+            "VALUES (?, ?, ?, ?)", (
+                int(suggestion_id),
+                date.isoformat(),
+                email,
+                vote_value,
+            ))
     conn.commit()
 
 
-def list_suggestions(conn):
+def list_suggestions(conn, email):
     '''
     Vrátí seznam suggestions z DB.
     Návratovou hodnotou je list dictů.
@@ -217,18 +222,21 @@ def list_suggestions(conn):
         SELECT
             suggestions.id,
             suggestions.title,
-            COALESCE(SUM(votes.value), 0) AS vote_count
+            COALESCE(SUM(votes.value), 0) AS vote_count,
+            COALESCE(SUM(my_votes.value), 0) AS my_vote
         FROM suggestions
         LEFT JOIN votes ON (votes.suggestion_id = suggestions.id)
+        LEFT JOIN votes my_votes ON (my_votes.suggestion_id = suggestions.id AND my_votes.email = ?)
         GROUP BY suggestions.id
         ORDER BY vote_count DESC
-    ''')
+    ''', (email, ))
     suggestions = []
     for row in c:
         suggestions.append({
             'id': row[0],
             'title': row[1],
             'vote_count': row[2],
+            'my_vote': row[3] if email else 0,
         })
     return suggestions
 

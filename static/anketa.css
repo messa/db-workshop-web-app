@@ -2,3 +2,6 @@ body {
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
+button, input.button {
+  cursor: pointer;
+}

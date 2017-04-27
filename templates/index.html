@@ -12,7 +12,7 @@
     </p>
     <form method="post" action="/add-suggestion">
       <input type="text" name="suggestion" placeholder="Váš návrh">
-      <input type="submit" value="Přidat">
+      <input type="submit" value="Přidat" class="button">
     </form>
   {% else %}
     <p>
@@ -33,14 +33,29 @@
             <form method="post" action="/vote">
               <input type="hidden" name="suggestion_id" value="{{ suggestion.id }}">
               <div class="btn-group btn-group-sm">
+
                 {# tlačítko pro přidání hlasu #}
-                <button class="btn btn-secondary" name="action" value="upvote">
-                  <i class="fa fa-arrow-up" aria-hidden="true" style="color: silver"></i>
+                {% if suggestion.my_vote > 0 %}
+                  <button class="btn btn-primary" name="action" value="reset">
+                    <i class="fa fa-arrow-up" aria-hidden="true"></i>
                 </button>
+                {% else %}
+                  <button class="btn btn-secondary" name="action" value="upvote">
+                    <i class="fa fa-arrow-up" aria-hidden="true" style="color: silver"></i>
+                  </button>
+                {% endif %}
+
                 {# tlačítko pro odebrání hlasu #}
-                <button class="btn btn-secondary" name="action" value="downvote">
-                  <i class="fa fa-arrow-down" aria-hidden="true" style="color: silver"></i>
-                </button>
+                {% if suggestion.my_vote < 0 %}
+                  <button class="btn btn-primary" name="action" value="reset">
+                    <i class="fa fa-arrow-down" aria-hidden="true"></i>
+                  </button>
+                {% else %}
+                  <button class="btn btn-secondary" name="action" value="downvote">
+                    <i class="fa fa-arrow-down" aria-hidden="true" style="color: silver"></i>
+                  </button>
+                {% endif %}
+
               </div>
           </form>
           </td>
