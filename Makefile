@@ -8,8 +8,8 @@ live_port=10004
 temp_port=10005
 docker_deploy_args= \
 	--restart unless-stopped \
-	--volume /srv/pyworking-anketa/conf /conf \
-	--volume /srv/pyworking-anketa/data /data
+	--volume /srv/pyworking-anketa/conf:/conf \
+	--volume /srv/pyworking-anketa/data:/data
 
 default: check
 
@@ -49,10 +49,10 @@ deploy:
 	make docker-image
 	make deploy-temp
 	sleep 2
-	curl -f http://localhost:$(temp_port)/_ok || ( make stop-temp; false )
+	curl -f http://localhost:$(temp_port)/ || ( make stop-temp; false )
 	make deploy-live
 	sleep 2
-	curl -f http://localhost:$(live_port)/_ok
+	curl -f http://localhost:$(live_port)/
 	make stop-temp
 	@echo Done
 

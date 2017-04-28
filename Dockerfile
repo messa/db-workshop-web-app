@@ -18,8 +18,8 @@ RUN /venv/bin/pip install -r /app/requirements.txt
 COPY . /app
 WORKDIR /app
 
-RUN useradd --no-create-home www
-USER www
+RUN useradd --no-create-home -u 2000 app
+USER app
 
 ENV ANKETA_CONF /conf/anketa.yaml
 
