@@ -1,0 +1,12 @@
+.git
+.cache
+__pycache__
+*.egg-info
+*.pyc
+Makefile
+venv
+local
+conf
+*.db
+*.journal
+*.db-journal

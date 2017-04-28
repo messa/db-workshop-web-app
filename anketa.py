@@ -18,6 +18,7 @@ cfg_path = os.environ['ANKETA_CONF']
 with open(cfg_path) as f:
     cfg = yaml.safe_load(f)['anketa']
 
+# secret_key je potřeba pro fungování flask.session
 app.secret_key = cfg['secret_key']
 
 
@@ -141,7 +142,7 @@ def vote():
 
 
 def get_conn():
-    return sqlite3.connect('anketa.db')
+    return sqlite3.connect(cfg['sqlite_db'])
 
 
 def prepare_schema(conn):

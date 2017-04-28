@@ -5,3 +5,4 @@ anketa:
         #callback_url: https://pyworking-anketa.messa.cz/login/github/oauth-callback
         callback_url: http://localhost:5000/login/github/oauth-callback
     secret_key: topsecret
+    sqlite_db: anketa.db
