@@ -35,24 +35,38 @@
               <div class="btn-group btn-group-sm">
 
                 {# tlačítko pro přidání hlasu #}
-                {% if suggestion.my_vote > 0 %}
-                  <button class="btn btn-primary" name="action" value="reset">
-                    <i class="fa fa-arrow-up" aria-hidden="true"></i>
-                </button>
+                {% if email %}
+                  {% if suggestion.my_vote > 0 %}
+                    <button class="btn btn-primary" name="action" value="reset">
+                      <i class="fa fa-arrow-up" aria-hidden="true"></i>
+                  </button>
+                  {% else %}
+                    <button class="btn btn-secondary" name="action" value="upvote">
+                      <i class="fa fa-arrow-up" aria-hidden="true" style="color: silver"></i>
+                    </button>
+                  {% endif %}
                 {% else %}
-                  <button class="btn btn-secondary" name="action" value="upvote">
+                  {# disabled verze - tlacitko nema byt aktivni #}
+                  <button class="btn btn-secondary disabled" disabled>
                     <i class="fa fa-arrow-up" aria-hidden="true" style="color: silver"></i>
                   </button>
                 {% endif %}
 
                 {# tlačítko pro odebrání hlasu #}
-                {% if suggestion.my_vote < 0 %}
-                  <button class="btn btn-primary" name="action" value="reset">
-                    <i class="fa fa-arrow-down" aria-hidden="true"></i>
-                  </button>
+                {% if email %}
+                  {% if suggestion.my_vote < 0 %}
+                    <button class="btn btn-primary" name="action" value="reset">
+                      <i class="fa fa-arrow-down" aria-hidden="true"></i>
+                    </button>
+                  {% else %}
+                    <button class="btn btn-secondary" name="action" value="downvote">
+                      <i class="fa fa-arrow-down" aria-hidden="true" style="color: silver"></i>
+                    </button>
+                  {% endif %}
                 {% else %}
-                  <button class="btn btn-secondary" name="action" value="downvote">
-                    <i class="fa fa-arrow-down" aria-hidden="true" style="color: silver"></i>
+                  {# disabled verze - tlacitko nema byt aktivni #}
+                  <button class="btn btn-secondary disabled" disabled>
+                    <i class="fa fa-arrow-up" aria-hidden="true" style="color: silver"></i>
                   </button>
                 {% endif %}
 

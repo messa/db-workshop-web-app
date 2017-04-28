@@ -142,7 +142,11 @@ def vote():
 
 
 def get_conn():
-    return sqlite3.connect(cfg['sqlite_db'])
+    db_path = cfg['sqlite_db']
+    try:
+        return sqlite3.connect(db_path)
+    except Exception as e:
+        raise Exception('Failed to open db {r}: {!r}'.format(db_path, e)) from e
 
 
 def prepare_schema(conn):
