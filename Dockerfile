@@ -29,5 +29,7 @@ CMD [ \
     "--bind", "0.0.0.0:8000", \
     "--preload", \
     "--max-requests", "100", \
+    "--access-logfile", "-", \
+    "--error-logfile", "-", \
     "anketa:app" \
 ]

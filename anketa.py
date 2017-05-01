@@ -85,6 +85,7 @@ def login_github_callback():
         'redirect_uri': cfg['github']['callback_url'],
     }, headers={'accept': 'application/json'})
     try:
+        print(r.content)
         r.raise_for_status()
         if not r.json().get('access_token'):
             raise Exception('No access_token')
@@ -102,6 +103,7 @@ def login_github_callback():
             cfg['github']['client_id'],
             token=flask.session['auth']['github_token'])
         r = gh_sess.get('https://api.github.com/user')
+        print(r.content)
         flask.session['auth'].update({
             'github_id': r.json()['id'],
             'github_login': r.json()['login'],
@@ -109,6 +111,7 @@ def login_github_callback():
         })
         return flask.redirect('/')
     except Exception as e:
+        print(e)
         flask.session['auth'] = None
         raise e
 
@@ -253,7 +256,7 @@ def list_suggestions(conn, github_id):
             'id': row[0],
             'title': row[1],
             'vote_count': row[2],
-            'my_vote': row[3] if email else 0,
+            'my_vote': row[3] if github_id else 0,
         })
     return suggestions
 
