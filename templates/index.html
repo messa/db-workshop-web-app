@@ -5,9 +5,9 @@
 
   <p class="lead">O čem by měl být některý příští <b>PyWorking</b>?</p>
 
-  {% if email %}
+  {% if github_id %}
     <p>
-      Jste přihlášeni jako {{ email }}.
+      Jste přihlášeni jako {{ github_login }}.
       <a href="/logout">Odhlásit</a>
     </p>
     <form method="post" action="/add-suggestion">

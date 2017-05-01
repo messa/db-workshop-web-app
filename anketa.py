@@ -30,13 +30,21 @@ def index():
     conn = get_conn()
     prepare_schema(conn)
     return flask.render_template('index.html',
-        email=get_session_email(),
-        suggestions=list_suggestions(conn, get_session_email()))
+        github_id=get_session_github_id(),
+        github_login=get_session_github_login(),
+        suggestions=list_suggestions(conn, get_session_github_id()))
 
 
-def get_session_email():
+def get_session_github_id():
     if flask.session.get('auth'):
-        return flask.session['auth'].get('email')
+        return flask.session['auth'].get('github_id')
+    else:
+        return None
+
+
+def get_session_github_login():
+    if flask.session.get('auth'):
+        return flask.session['auth'].get('github_login')
     else:
         return None
 
@@ -94,7 +102,11 @@ def login_github_callback():
             cfg['github']['client_id'],
             token=flask.session['auth']['github_token'])
         r = gh_sess.get('https://api.github.com/user')
-        flask.session['auth']['email'] = r.json()['email']
+        flask.session['auth'].update({
+            'github_id': r.json()['id'],
+            'github_login': r.json()['login'],
+            'email': r.json().get('email'),
+        })
         return flask.redirect('/')
     except Exception as e:
         flask.session['auth'] = None
@@ -108,11 +120,11 @@ def add_suggestion():
     Redirectuje zpět na index.
     '''
     title = flask.request.form['suggestion']
-    email = get_session_email()
-    if not email:
+    github_id = get_session_github_id()
+    if not github_id:
         flask.abort(403) # Forbidden
     conn = get_conn()
-    insert_suggestion(conn, title, email)
+    insert_suggestion(conn, title, github_id)
     # https://en.wikipedia.org/wiki/Post/Redirect/Get
     return flask.redirect('/')
 
@@ -125,8 +137,8 @@ def vote():
     '''
     sug_id = flask.request.form['suggestion_id']
     action = flask.request.form['action']
-    email = get_session_email()
-    if not email:
+    github_id = get_session_github_id()
+    if not github_id:
         flask.abort(403) # Forbidden
     conn = get_conn()
     if action == 'upvote':
@@ -137,7 +149,7 @@ def vote():
         vote_value = 0
     else:
         raise Exception('Unknown action {!r}'.format(action))
-    save_vote(conn, sug_id, email, vote_value)
+    save_vote(conn, sug_id, github_id, vote_value)
     return flask.redirect('/')
 
 
@@ -175,7 +187,7 @@ def prepare_schema(conn):
     ''')
 
 
-def insert_suggestion(conn, title, email, date=None):
+def insert_suggestion(conn, title, github_id, date=None):
     if not title:
         # prázdný návrh přidávat nechceme
         return
@@ -188,35 +200,35 @@ def insert_suggestion(conn, title, email, date=None):
         return
     c.execute(
         "INSERT INTO suggestions (title, date, email) VALUES (?, ?, ?)",
-        (title, date.isoformat(), email))
+        (title, date.isoformat(), github_id))
     conn.commit()
 
 
-def save_vote(conn, suggestion_id, email, vote_value, date=None):
+def save_vote(conn, suggestion_id, github_id, vote_value, date=None):
     '''
     Vloží vote pro nějakou suggestion do DB.
     '''
-    if not email:
+    if not github_id:
         return
     date = date or datetime.utcnow()
     c = conn.cursor()
     # https://www.sqlite.org/lang_insert.html
     c.execute(
         "DELETE FROM votes WHERE suggestion_id = ? AND email = ?",
-        (int(suggestion_id), email))
+        (int(suggestion_id), github_id))
     if vote_value:
         c.execute(
             "INSERT INTO votes (suggestion_id, date, email, value) "
             "VALUES (?, ?, ?, ?)", (
                 int(suggestion_id),
                 date.isoformat(),
-                email,
+                github_id,
                 vote_value,
             ))
     conn.commit()
 
 
-def list_suggestions(conn, email):
+def list_suggestions(conn, github_id):
     '''
     Vrátí seznam suggestions z DB.
     Návratovou hodnotou je list dictů.
@@ -234,7 +246,7 @@ def list_suggestions(conn, email):
         LEFT JOIN votes my_votes ON (my_votes.suggestion_id = suggestions.id AND my_votes.email = ?)
         GROUP BY suggestions.id
         ORDER BY vote_count DESC
-    ''', (email, ))
+    ''', (github_id, ))
     suggestions = []
     for row in c:
         suggestions.append({
