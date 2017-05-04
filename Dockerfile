@@ -18,15 +18,14 @@ RUN /venv/bin/pip install -r /app/requirements.txt
 COPY . /app
 WORKDIR /app
 
-RUN useradd --no-create-home -u 2000 app
-USER app
+ENV ANKETA_CONF /app/conf/anketa.sample.yaml
 
-ENV ANKETA_CONF /conf/anketa.yaml
+EXPOSE 80
 
 CMD [ \
     "/venv/bin/gunicorn", \
     "--workers", "2", \
-    "--bind", "0.0.0.0:8000", \
+    "--bind", "0.0.0.0:80", \
     "--preload", \
     "--max-requests", "100", \
     "--access-logfile", "-", \

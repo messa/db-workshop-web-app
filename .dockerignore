@@ -6,7 +6,6 @@ __pycache__
 Makefile
 venv
 local
-conf
 *.db
 *.journal
 *.db-journal
